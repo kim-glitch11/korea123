@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>산재 신청 환자 안내문</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800&display=swap">
+<style>
+  :root{--ink:#1a1f26;--sub:#6b7380;--line:#e4e7eb;--accent:#1f5f8b;--fill:#fff4b8}
+  *{box-sizing:border-box}
+  html,body{margin:0;background:#f3f4f6;color:var(--ink);font-family:"Noto Sans KR",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+
+  /* toolbar */
+  .toolbar{position:sticky;top:0;z-index:5;display:flex;gap:6px;align-items:center;justify-content:center;flex-wrap:wrap;
+    padding:10px;background:rgba(255,255,255,.92);backdrop-filter:blur(6px);border-bottom:1px solid var(--line)}
+  .toolbar button{font:inherit;font-size:13px;padding:7px 14px;border-radius:999px;border:1px solid var(--line);background:#fff;color:var(--ink);cursor:pointer}
+  .toolbar button:hover{border-color:#c9ced4}
+  .toolbar button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+  .toolbar .status{font-size:12px;color:var(--sub);margin-left:6px}
+  .help{margin:14px auto 0;font-size:12.5px;color:var(--sub);text-align:center;padding:0 12px}
+
+  /* sheet */
+  .wrap{padding:16px 12px 60px;display:flex;justify-content:center}
+  .sheet{width:210mm;min-height:297mm;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.06),0 8px 28px rgba(0,0,0,.06);
+    padding:18mm 18mm 14mm;display:flex;flex-direction:column;font-size:11pt;line-height:1.65}
+  .sheet.editing [data-edit]{outline:1px dashed #b7c8d6;outline-offset:3px;border-radius:2px}
+  .sheet.editing [data-edit]:focus{outline:1.5px solid var(--accent);background:#f8fbfd}
+
+  header{padding-bottom:12px;border-bottom:1.5px solid var(--ink)}
+  .org{font-size:10pt;font-weight:500;color:var(--sub);letter-spacing:.02em}
+  h1{margin:4px 0 0;font-size:24pt;font-weight:800;letter-spacing:-.03em;line-height:1.25}
+  .lead{margin:12px 0 0;color:#333a44}
+  .lead b{color:var(--accent);font-weight:700}
+
+  section{display:grid;grid-template-columns:30mm 1fr;gap:0 6mm;padding:11px 0;border-bottom:1px solid var(--line)}
+  section:last-of-type{border-bottom:none}
+  section h2{margin:0;font-size:11pt;font-weight:700;color:var(--accent);line-height:1.65}
+
+  /* steps */
+  .steps{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(5,1fr);gap:8px;position:relative}
+  .steps::before{content:"";position:absolute;left:9px;right:9px;top:9px;height:1px;background:var(--line)}
+  .steps li{position:relative;padding-top:26px}
+  .steps li::before{content:attr(data-n);position:absolute;top:0;left:0;width:19px;height:19px;border-radius:50%;
+    background:#fff;border:1.5px solid var(--accent);color:var(--accent);font-size:9pt;font-weight:700;display:grid;place-items:center;line-height:1}
+  .steps b{display:block;font-size:10.5pt}
+  .steps span{display:block;font-size:9.5pt;color:var(--sub);line-height:1.5}
+  .note{margin:8px 0 0;font-size:9.5pt;color:var(--sub)}
+
+  ul.plain{margin:0;padding:0;list-style:none}
+  ul.plain li{position:relative;padding-left:12px;margin:1px 0}
+  ul.plain li::before{content:"";position:absolute;left:0;top:.75em;width:4px;height:4px;border-radius:50%;background:#9aa3ad}
+  ul.plain b{font-weight:700}
+
+  dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:4px 14px}
+  dt{font-weight:700;white-space:nowrap}
+  dd{margin:0;color:#333a44}
+
+  .caution{margin-top:9px;padding-left:10px;border-left:2px solid #c2410c;font-size:10.5pt;color:#333a44}
+  .caution b{color:#c2410c}
+  .fill{background:var(--fill);padding:0 3px;border-radius:2px}
+
+  footer{margin-top:auto;padding-top:12px;border-top:1.5px solid var(--ink);display:flex;justify-content:space-between;align-items:flex-end;gap:12px}
+  .contacts{display:flex;gap:28px}
+  .contacts div{font-size:9.5pt;color:var(--sub)}
+  .contacts b{display:block;font-size:13pt;font-weight:700;color:var(--ink);letter-spacing:.01em}
+  .stamp{font-size:8.5pt;color:var(--sub);text-align:right;line-height:1.5}
+
+  .toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:9px 16px;border-radius:999px;font-size:13px;opacity:0;transition:.2s;pointer-events:none}
+  .toast.show{opacity:1}
+
+  @media (max-width:820px){
+    .sheet{width:100%;min-height:auto;padding:22px}
+    section{grid-template-columns:1fr;gap:4px}
+    .steps{grid-template-columns:1fr 1fr}.steps::before{display:none}
+    .contacts{flex-direction:column;gap:8px}
+  }
+  @page{size:A4;margin:0}
+  @media print{
+    html,body{background:#fff}
+    .toolbar,.help,.toast{display:none!important}
+    .wrap{padding:0}
+    .sheet{box-shadow:none;height:297mm;min-height:0}
+    .sheet [data-edit]{outline:none!important;background:none!important}
+    .fill{background:none}
+    *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  }
+</style>
+</head>
+<body>
+<div class="toolbar">
+  <button id="editBtn">편집</button>
+  <button id="printBtn">인쇄</button>
+  <button id="copyBtn">HTML 복사</button>
+  <button id="resetBtn">원래대로</button>
+  <span class="status" id="status"></span>
+</div>
+<p class="help">‘편집’을 누르면 글자를 바로 고칠 수 있습니다 · 노란 칸은 병원에서 채울 부분 · 이 브라우저에 자동 저장</p>
+
+<div class="wrap">
+<article class="sheet" id="sheet">
+  <header>
+    <div class="org" data-edit>단디병원 원무과 · 환자 안내</div>
+    <h1 data-edit>산업재해(산재) 신청 안내</h1>
+    <p class="lead" data-edit>일하다 다치거나, 일 때문에 병이 생겼거나, 출퇴근 중 다쳐서 <b>4일 이상 치료가 필요하면</b> 근로복지공단에 산재를 신청할 수 있습니다. 3일 안에 치료가 끝나면 산재보험이 아니라 회사에서 보상합니다.</p>
+  </header>
+
+  <section>
+    <h2 data-edit>신청 절차</h2>
+    <div>
+      <ol class="steps">
+        <li data-n="1"><b data-edit>접수</b><span data-edit>원무과에 “일하다 다쳤다”고 알려 주세요</span></li>
+        <li data-n="2"><b data-edit>소견서</b><span data-edit>담당 의사가 초진소견서 작성</span></li>
+        <li data-n="3"><b data-edit>신청서 제출</b><span data-edit>공단에 요양급여신청서 제출 (원무과 대행 가능)</span></li>
+        <li data-n="4"><b data-edit>공단 심사</b><span data-edit>원칙적으로 7일 이내 결과 통지</span></li>
+        <li data-n="5"><b data-edit>결과</b><span data-edit>승인: 산재 치료<br>불승인: 건강보험 전환</span></li>
+      </ol>
+      <p class="note" data-edit>공단의 조사·진찰 기간은 7일에 포함되지 않아 더 걸릴 수 있으며, 업무상 질병은 별도 심의로 더 오래 걸립니다.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2 data-edit>준비할 것</h2>
+    <ul class="plain" data-edit>
+      <li>신분증</li>
+      <li>다친 경위 — 날짜·시간, 장소, 하던 작업, 다친 과정</li>
+      <li>회사 정보 — 회사명, 주소, 연락처 (사업장관리번호를 알면 함께)</li>
+      <li>목격자 이름·연락처 (있는 경우)</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2 data-edit>치료비</h2>
+    <ul class="plain" data-edit>
+      <li><b>승인 후</b> — 공단이 병원에 직접 지급합니다. 단, 비급여 항목은 본인 부담입니다.</li>
+      <li><b>결정 전</b> — <span class="fill">[병원 수납 기준 기입 — 예: 건강보험으로 먼저 수납 후 승인 시 정산]</span></li>
+    </ul>
+  </section>
+
+  <section>
+    <h2 data-edit>꼭 알아두세요</h2>
+    <div>
+      <dl data-edit>
+        <dt>회사 동의</dt><dd>필요 없습니다. 회사 도장·확인 없이 본인이 신청할 수 있습니다.</dd>
+        <dt>휴업급여</dt><dd>일하지 못한 기간에 1일 평균임금의 70%. 3일 이내면 지급되지 않으며, 별도로 청구해야 합니다.</dd>
+        <dt>청구 기한</dt><dd>보험급여는 3년 안에 청구해야 합니다.</dd>
+        <dt>불승인 시</dt><dd>결과를 받은 뒤 90일 이내에 심사청구를 할 수 있습니다.</dd>
+      </dl>
+      <p class="caution" data-edit><b>공상 처리 주의</b> — 산재 신청 없이 회사와 합의하면, 나중에 재발하거나 장해가 남았을 때 보상받기 어려울 수 있습니다.</p>
+    </div>
+  </section>
+
+  <footer>
+    <div class="contacts">
+      <div data-edit>단디병원 원무과<b><span class="fill">000-000-0000</span></b></div>
+      <div data-edit>근로복지공단 고객센터<b>1588-0075</b></div>
+    </div>
+    <div class="stamp" data-edit>2026년 11월 기준<br>제도 변경 시 원무과에 문의하세요</div>
+  </footer>
+</article>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  var KEY="sanjae-guide-v2";
+  var sheet=document.getElementById("sheet");
+  var editBtn=document.getElementById("editBtn");
+  var status=document.getElementById("status");
+  var original=sheet.innerHTML;
+  var editing=false;
+
+  function toast(msg){var t=document.getElementById("toast");t.textContent=msg;t.classList.add("show");clearTimeout(t._h);t._h=setTimeout(function(){t.classList.remove("show")},2000);}
+  function save(){try{localStorage.setItem(KEY,sheet.innerHTML);status.textContent="저장됨";}catch(e){status.textContent="저장 불가";}}
+  function setEditable(on){
+    sheet.querySelectorAll("[data-edit]").forEach(function(el){el.contentEditable=on?"true":"false";});
+    sheet.classList.toggle("editing",on);
+  }
+  try{var saved=localStorage.getItem(KEY);if(saved){sheet.innerHTML=saved;}}catch(e){}
+  setEditable(false);
+
+  editBtn.addEventListener("click",function(){
+    editing=!editing;setEditable(editing);
+    editBtn.textContent=editing?"편집 완료":"편집";
+    editBtn.classList.toggle("on",editing);
+    status.textContent=editing?"편집 중":"";
+    if(!editing){save();toast("저장되었습니다");}
+  });
+  sheet.addEventListener("input",function(){if(editing){clearTimeout(sheet._h);sheet._h=setTimeout(save,500);}});
+  sheet.addEventListener("paste",function(e){
+    if(!editing)return;e.preventDefault();
+    var text=(e.clipboardData||window.clipboardData).getData("text/plain");
+    document.execCommand("insertText",false,text);
+  });
+
+  document.getElementById("resetBtn").addEventListener("click",function(){
+    var b=this;
+    if(b.dataset.armed!=="1"){b.dataset.armed="1";b.textContent="한 번 더 누르면 초기화";setTimeout(function(){b.dataset.armed="";b.textContent="원래대로";},3000);return;}
+    b.dataset.armed="";b.textContent="원래대로";
+    sheet.innerHTML=original;try{localStorage.removeItem(KEY);}catch(e){}
+    setEditable(editing);toast("처음 내용으로 되돌렸습니다");
+  });
+
+  document.getElementById("printBtn").addEventListener("click",function(){
+    var ok=false;
+    try{window.print();ok=true;}catch(e){}
+    setTimeout(function(){toast("인쇄 창이 안 뜨면 HTML 파일을 열어 Ctrl+P로 인쇄하세요")},ok?800:0);
+  });
+
+  document.getElementById("copyBtn").addEventListener("click",function(){
+    var clone=document.documentElement.cloneNode(true);
+    clone.querySelectorAll("[contenteditable]").forEach(function(el){el.removeAttribute("contenteditable");});
+    var c=clone.querySelector("#sheet");if(c)c.classList.remove("editing");
+    var html="<!DOCTYPE html>\n"+clone.outerHTML;
+    try{navigator.clipboard.writeText(html).then(function(){toast("HTML이 복사되었습니다");},function(){toast("복사가 막혔습니다");});}
+    catch(e){toast("복사가 막혔습니다");}
+  });
+})();
+</script>
+</body>
+</html>
